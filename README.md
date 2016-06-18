@@ -29,6 +29,15 @@ var student = new { Age = 19, Other.Name, Major };
 
 //Anonymous Types3
 var student = new { Age = Age, Name = Other.Name, Major = Major };
+
+// Array of objects of an anonymous type
+var students = new[] 
+{
+    new { LName="Jones", FName="Mary", Age=19, Major="History" },
+    new { LName="Smith", FName="Bob", Age=20, Major="CompSci" },
+    new { LName="Fleming", FName="Carol", Age=21, Major="History" }
+};
+
 ```
 
 
@@ -129,9 +138,165 @@ var query = from s in students
 
 
 
-## Join
+
+
+
+## Where Clause
 ```cs
+var groupA = new[] { 3, 4, 5, 6 };
+var groupB = new[] { 6, 7, 8, 9 };
+
+var someInts =  from int a in groupA
+                from int b in groupB
+                let sum = a + b
+                where sum >= 11 // Condition 1
+                where a == 4    // Condition 2
+                select new {a, b, sum};
+
+foreach (var a in someInts)
+    Console.WriteLine(a);
+
+//Output
+{ a = 4, b = 7, sum = 11 }
+{ a = 4, b = 8, sum = 12 }
+{ a = 4, b = 9, sum = 13 }
+```
+
+
+
+
+
+
+## orderby Clause
+```cs
+var query = from student in students
+            orderby student.Age ← Order by Age.
+            select student;
+```
+
+
+
+
+
+
+## group Clause
+```cs
+var students = new[] // Array of objects of an anonymous type
+{
+    new { LName="Jones", FName="Mary", Age=19, Major="History" },
+    new { LName="Smith", FName="Bob", Age=20, Major="CompSci" },
+    new { LName="Fleming", FName="Carol", Age=21, Major="History" }
+};
+
+var query = from student in students
+            group student by student.Major;
+foreach (var s in query) // Enumerate the groups.
+{
+    Console.WriteLine("{0}", s.Key);  //Grouping key
+
+    foreach (var t in s) // Enumerate the items in the group.
+    Console.WriteLine(" {0}, {1}", t.LName, t.FName);
+}
+
+//Output
+History
+    Jones, Mary
+    Fleming, Carol
+CompSci
+    Smith, Bob
 
 ```
 
+
+
+
+## into Clause
+```cs
+var groupA = new[] { 3, 4, 5, 6 };
+var groupB = new[] { 4, 5, 6, 7 };
+
+var someInts =  from a in groupA
+                join b in groupB on a equals b
+                into groupAandB // Query continuation
+                from c in groupAandB
+                select c;
+
+foreach (var a in someInts)
+    Console.Write("{0} ", a);
+```
+
+
+
+
+## Standard Query Operators
+```cs
+
+int[] numbers = new int[] {2, 4, 6};
+int total = numbers.Sum();
+int howMany = numbers.Count();
+
+
+int[] intArray = new int[] { 3, 4, 5, 6, 7, 9 };
+
+// Method syntax
+var count1 = Enumerable.Count(intArray); 
+var firstNum1 = Enumerable.First(intArray); 
+
+// Extension syntax
+var count2 = intArray.Count(); 
+var firstNum2 = intArray.First(); 
+
+Console.WriteLine("Count: {0}, FirstNumber: {1}", count1, firstNum1);
+Console.WriteLine("Count: {0}, FirstNumber: {1}", count2, firstNum2);
+
+//Output
+Count: 6, FirstNumber: 3
+Count: 6, FirstNumber: 3
+
+```
+
+
+## Query Expressions
+```cs
+var numbers = new int[] { 2, 6, 4, 8, 10 };
+int howMany = (from n in numbers
+                where n < 7
+            select n).Count();  // Query expression and Operator
+
+Console.WriteLine("Count: {0}", howMany);
+
+//Output 
+Count: 3
+```
+
+
+
+## Delegates As Parameters
+```cs
+int[] intArray = new int[] { 3, 4, 5, 6, 7, 9 };
+var countOdd = intArray.Count(n => n % 2 == 1); //Lambda expression identifying the odd values
+Console.WriteLine("Count of odd numbers: {0}", countOdd);
+
+//Output
+Count of odd numbers: 4
+```
+
+
+## Lambda Expression Parameter
+```cs
+int[] intArray = new int[] { 3, 4, 5, 6, 7, 9 };
+
+Func<int, bool> myDel = delegate(int x)     //Anonymous method
+                        {
+                            return x % 2 == 1;
+                        };
+var countOdd = intArray.Count(myDel);
+
+Console.WriteLine("Count of odd numbers: {0}", countOdd);
+```
+
+
+## Lambda Expression Parameter
+```cs
+```
 
