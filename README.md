@@ -671,11 +671,205 @@ Console.WriteLine();
 
 ```
 
+# LINQ Operators
 
-
-## Using Enumerable / Lambda Expressions
+## Filtering
+Where - Returns a subset of elements that satisfy a given condition 
+Take - Returns the first count elements and discards the rest 
+Skip - Ignores the first count elements and returns the rest
+TakeWhile - Emits elements from the input sequence until the predicate is false 
+SkipWhile - Ignores elements from the input sequence until the predicate is false, and then emits the rest
+Distinct - Returns a sequence that excludes duplicates 
 ```cs
 
+string[] names = { "Tom", "Dick", "Harry", "Mary", "Jay" };
+// Result: { "Harry", "Mary", "Jay" }
+IEnumerable<string> query = names.Where (name => name.EndsWith ("y"));
+
+
+//Take and Skip
+//there are 100 matches. The following returns the first 20:
+IQueryable<Book> query = dataContext.Books
+.Where (b => b.Title.Contains ("mercury"))
+.OrderBy (b => b.Title)
+.Take (20);
+
+
+//The next query returns books 21 to 40:
+IQueryable<Book> query = dataContext.Books
+.Where (b => b.Title.Contains ("mercury"))
+.OrderBy (b => b.Title)
+.Skip (20).Take (20);
+
+
+//TakeWhile and SkipWhile
+int[] numbers = { 3, 5, 2, 234, 4, 1 };
+var takeWhileSmall = numbers.TakeWhile (n => n < 100); // { 3, 5, 2 }
+
+
+int[] numbers = { 3, 5, 2, 234, 4, 1 };
+var skipWhileSmall = numbers.SkipWhile (n => n < 100); // { 234, 4, 1 }
+
+//Distinct
+char[] distinctLetters = "HelloWorld".Distinct().ToArray();
+string s = new string (distinctLetters); // HeloWrd
+
+```
+
+
+
+## Projecting
+Select - Transforms each input element with the given lambda expression 
+SelectMany - Transforms each input element, and then flattens and concatenates the resultant subsequences
+
+```cs
+IEnumerable<string> query = from f in FontFamily.Families
+select f.Name;
+
+
+//SelectMany
+string[] fullNames = { "Anne Williams", "John Fred Smith", "Sue Green" };
+IEnumerable<string> query = fullNames.SelectMany (name => name.Split());
+foreach (string name in query)
+Console.Write (name + "|"); // Anne|Williams|John|Fred|Smith|Sue|Green|
+
+
+
+from c in dataContext.Customers
+where c.Purchases.Any (p => p.Price > 1000)
+select new {
+c.Name,
+Purchases = from p in c.Purchases
+where p.Price > 1000
+select new { p.Description, p.Price }
+};
+```
+
+## Joining
+Join - Applies a lookup strategy to match elements from two collections, emitting a flat result set
+GroupJoin - As above, but emits a hierarchical result set 
+Zip  - Enumerates two sequences in step (like a zipper), applying a function over each element pair
+```cs
+
+```
+
+## Ordering
+```cs
+IEnumerable<string> query = names.OrderBy (s => s.Length);
+IEnumerable<string> query = names.OrderBy (s => s.Length);
+
+IEnumerable<string> query = names.OrderBy (s => s.Length).ThenBy (s => s);
+
+names.OrderBy (s => s.Length).ThenBy (s => s[1]).ThenBy (s => s[0]);
+
+dataContext.Purchases.OrderByDescending (p => p.Price).ThenBy (p => p.Description);
+```
+
+
+## Set Operators
+Concat - Returns a concatenation of elements in each of the two sequences 
+Union - Returns a concatenation of elements in each of the two sequences, excluding duplicates
+Intersect - Returns elements present in both sequences 
+Except - Returns elements present in the first, but not the second sequence EXCEPT
+```cs
+int[] seq1 = { 1, 2, 3 }, seq2 = { 3, 4, 5 };
+IEnumerable<int> concat = seq1.Concat (seq2), // { 1, 2, 3, 3, 4, 5 }
+union = seq1.Union (seq2); // { 1, 2, 3, 4, 5 }
+
+
+int[] seq1 = { 1, 2, 3 }, seq2 = { 3, 4, 5 };
+IEnumerable<int>
+commonality = seq1.Intersect (seq2), // { 3 }
+difference1 = seq1.Except (seq2), // { 1, 2 }
+difference2 = seq2.Except (seq1); // { 4, 5 }
+```
+
+
+## Conversion Methods
+OfType - Converts IEnumerable to IEnumerable<T>, discarding wrongly typed elements
+Cast - Converts IEnumerable to IEnumerable<T>, throwing an exception if there are any wrongly typed elements
+ToArray - Converts IEnumerable<T> to T[]
+ToList - Converts IEnumerable<T> to List<T>
+ToDictionary -  Converts IEnumerable<T> to Dictionary<TKey,TValue>
+ToLookup - Converts IEnumerable<T> to ILookup<TKey,TElement>
+AsEnumerable - Downcasts to IEnumerable<T>
+AsQueryable - Casts or converts to IQueryable<T>
+```cs
+ArrayList classicList = new ArrayList(); // in System.Collections
+classicList.AddRange ( new int[] { 3, 4, 5 } );
+IEnumerable<int> sequence1 = classicList.Cast<int>();
+
+```
+
+## Element Operators
+```cs
+int[] numbers = { 1, 2, 3, 4, 5 };
+int first = numbers.First(); // 1
+int last = numbers.Last(); // 5
+int firstEven = numbers.First (n => n % 2 == 0); // 2
+int lastEven = numbers.Last (n => n % 2 == 0); // 4
+
+int firstBigError = numbers.First (n => n > 10); // Exception
+int firstBigNumber = numbers.FirstOrDefault (n => n > 10); // 0
+
+
+int onlyDivBy3 = numbers.Single (n => n % 3 == 0); // 3
+int divBy2Err = numbers.Single (n => n % 2 == 0); // Error: 2 & 4 match
+int singleError = numbers.Single (n => n > 10); // Error
+int noMatches = numbers.SingleOrDefault (n => n > 10); // 0
+int divBy2Error = numbers.SingleOrDefault (n => n % 2 == 0); // Error
+
+
+int[] numbers = { 1, 2, 3, 4, 5 };
+int third = numbers.ElementAt (2); // 3
+int tenthError = numbers.ElementAt (9); // Exception
+int tenth = numbers.ElementAtOrDefault (9); // 0
+```
+
+## Aggregation Methods
+```cs
+int digitCount = "pa55w0rd".Count (c => char.IsDigit (c)); // 3
+
+int[] numbers = { 28, 32, 14 };
+int smallest = numbers.Min(); // 14;
+int largest = numbers.Max(); // 32;
+
+
+decimal[] numbers = { 3, 4, 8 };
+decimal sumTotal = numbers.Sum(); // 15
+decimal average = numbers.Average(); // 5 (mean value)
+
+```
+
+
+## Quantifiers
+```cs
+bool hasAThree = new int[] { 2, 3, 4 }.Contains (3); // true;
+
+
+bool hasAThree = new int[] { 2, 3, 4 }.Any (n => n == 3); // true;
+
+bool hasABigNumber = new int[] { 2, 3, 4 }.Any (n => n > 10); // false;
+
+
+bool hasABigNumber = new int[] { 2, 3, 4 }.Where (n => n > 10).Any();
+
+dataContext.Customers.Where (c => c.Purchases.All (p => p.Price < 100));
+
+
+foreach (int i in Enumerable.Range (5, 3))
+Console.Write (i + " "); // 5 6 7
+
+
+foreach (int i in Enumerable.Repeat (5, 3))
+Console.Write (i + " "); // 5 5 5
+
+```
+
+
+
+## Projecting
+```cs
 
 ```
 
