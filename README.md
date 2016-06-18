@@ -96,6 +96,26 @@ foreach (var a in someInts)
 
 ```
 
+## Let Clause
+```cs
+var groupA = new[] { 3, 4, 5, 6 };
+var groupB = new[] { 6, 7, 8, 9 };
+
+var someInts =  from a in groupA
+                from b in groupB
+                let sum = a + b //Store result in new variable.
+                where sum == 12
+                select new {a, b, sum};
+
+foreach (var a in someInts)
+    Console.WriteLine(a);
+
+//Output
+{ a = 3, b = 9, sum = 12 }
+{ a = 4, b = 8, sum = 12 }
+{ a = 5, b = 7, sum = 12 }
+{ a = 6, b = 6, sum = 12 }
+```
 
 
 ## Join Clause
