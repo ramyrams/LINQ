@@ -671,15 +671,15 @@ Console.WriteLine();
 
 ```
 
-# LINQ Operators
+## LINQ Operators
 
-## Filtering
-Where - Returns a subset of elements that satisfy a given condition 
-Take - Returns the first count elements and discards the rest 
-Skip - Ignores the first count elements and returns the rest
-TakeWhile - Emits elements from the input sequence until the predicate is false 
-SkipWhile - Ignores elements from the input sequence until the predicate is false, and then emits the rest
-Distinct - Returns a sequence that excludes duplicates 
+### Filtering
+* Where - Returns a subset of elements that satisfy a given condition 
+* Take - Returns the first count elements and discards the rest 
+* Skip - Ignores the first count elements and returns the rest
+* TakeWhile - Emits elements from the input sequence until the predicate is false 
+* SkipWhile - Ignores elements from the input sequence until the predicate is false, and then emits the rest
+* Distinct - Returns a sequence that excludes duplicates 
 ```cs
 
 string[] names = { "Tom", "Dick", "Harry", "Mary", "Jay" };
