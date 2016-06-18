@@ -1,17 +1,35 @@
 # LINQ
 
 
+## Lambda Expressions
 ```cs
-// Data source
-int[] numbers = { 2, 12, 5, 15 };
+( ArgumentsToProcess ) => { StatementsToProcessThem }
 
-// Define and store the query.
-IEnumerable<int> lowNums = from n in numbers
-                            where n < 10
-                            select n;
-// Execute the query.
-foreach (var x in lowNums) 
-  Console.Write("{0}, ", x);
+// C# lambda expression.
+List<int> evenNumbers = list.FindAll(i => (i % 2) == 0);
+
+```
+
+
+## Extension Methods
+```cs
+namespace ExtensionMethods
+{
+    public static class MyExtensions
+    {
+        public static int WordCount(this String str)
+        {
+            return str.Split(new char[] { ' ', '.', '?' }, 
+                             StringSplitOptions.RemoveEmptyEntries).Length;
+        }
+    }   
+}
+
+
+using ExtensionMethods;
+string s = "Hello Extension Methods";
+int i = s.WordCount();
+
 
 ```
 
@@ -39,6 +57,139 @@ var students = new[]
 };
 
 ```
+
+
+
+## Basic
+```cs
+// Data source
+int[] numbers = { 2, 12, 5, 15 };
+
+// Define and store the query.
+IEnumerable<int> lowNums = from n in numbers
+                            where n < 10
+                            select n;
+// Execute the query.
+foreach (var x in lowNums) 
+  Console.Write("{0}, ", x);
+  
+  
+//Projecting New Data Types
+var nameDesc = from p in products select new { p.Name, p.Description };  
+
+return nameDesc; // Nope!   //static var GetProjectedSubset(ProductInfo[] products)
+
+// Map set of anonymous objects to an Array object.
+return nameDesc.ToArray();  //static Array GetProjectedSubset(ProductInfo[] products)
+
+
+```
+
+
+
+##LINQ As a Better Venn Diagramming Tool
+```cs
+
+List<string> myCars = new List<String> {"Yugo", "Aztec", "BMW"};
+List<string> yourCars = new List<String>{"BMW", "Saab", "Aztec" };
+
+
+var carDiff =(from c in myCars select c)
+	.Except(from c2 in yourCars select c2);
+
+
+Console.WriteLine("Here is what you don't have, but I do:");
+
+foreach (string s in carDiff)
+	Console.WriteLine(s); // Prints Yugo.
+
+
+// Get the common members.
+var carIntersect = (from c in myCars select c)
+.Intersect(from c2 in yourCars select c2);
+
+Console.WriteLine("Here is what we have in common:");
+foreach (string s in carIntersect)
+Console.WriteLine(s); // Prints Aztec and BMW.
+
+
+
+
+// Get the union of these containers.
+var carUnion = (from c in myCars select c)
+.Union(from c2 in yourCars select c2);
+Console.WriteLine("Here is everything:");
+foreach (string s in carUnion)
+Console.WriteLine(s); // Prints all common members.
+
+
+
+
+var carConcat = (from c in myCars select c)
+.Concat(from c2 in yourCars select c2);
+// Prints: Yugo Aztec BMW BMW Saab Aztec.
+foreach (string s in carConcat)
+Console.WriteLine(s);
+
+```
+
+
+## LINQ Aggregation Operations
+```cs
+double[] winterTemps = { 2.0, -21.3, 8, -4, 0, 8.2 };
+
+// Various aggregation examples.
+Console.WriteLine("Max temp: {0}",
+(from t in winterTemps select t).Max());
+
+Console.WriteLine("Min temp: {0}",
+(from t in winterTemps select t).Min());
+
+Console.WriteLine("Avarage temp: {0}",
+(from t in winterTemps select t).Average());
+
+Console.WriteLine("Sum of all temps: {0}",
+(from t in winterTemps select t).Sum());
+
+
+```
+
+
+
+## With & Without LINQ
+```cs
+// Assume we have an array of strings.
+string[] currentVideoGames = { "Morrowind", "Uncharted 2", "Fallout 3", "Daxter", "System Shock 2" };
+string[] gamesWithSpaces = new string[5];
+
+for (int i = 0; i < currentVideoGames.Length; i++)
+{
+    if (currentVideoGames[i].Contains(" "))
+        gamesWithSpaces[i] = currentVideoGames[i];
+}
+
+// Now sort them.
+Array.Sort(gamesWithSpaces);
+
+// Print out the results.
+foreach (string s in gamesWithSpaces)
+{
+    if (s != null)
+        Console.WriteLine("Item: {0}", s);
+}
+
+//With Linq
+// Build a query expression to find the items in the array that have an embedded space.
+IEnumerable<string> subset = from g in currentVideoGames
+                            where g.Contains(" ") orderby g select g;
+                            
+// Print out the results.
+foreach (string s in subset)
+Console.WriteLine("Item: {0}", s);
+
+
+```
+
 
 
 
@@ -160,12 +311,40 @@ foreach (var a in someInts)
 { a = 4, b = 7, sum = 11 }
 { a = 4, b = 8, sum = 12 }
 { a = 4, b = 9, sum = 13 }
+
+
+
+// Find the fast BMWs!
+var fastCars = from c in myCars where c.Speed > 90 && c.Make == "BMW" select c;
+
+
 ```
 
 
+## Applying LINQ Queries to Nongeneric Collections
+```cs
+// Transform ArrayList into an IEnumerable<T>-compatible type.
+var myCarsEnum = myCars.OfType<Car>();
 
+// Create a query expression targeting the compatible type.
+var fastCars = from c in myCarsEnum where c.Speed > 55 select c;
+```
 
+## Filtering Data Using OfType<T>()
+```cs
+// Extract the ints from the ArrayList.
+ArrayList myStuff = new ArrayList();
 
+myStuff.AddRange(new object[] { 10, 400, 8, false, new Car(), "string data" });
+
+var myInts = myStuff.OfType<int>();
+
+// Prints out 10, 400, and 8.
+foreach (int i in myInts)
+{
+  Console.WriteLine("Int value: {0}", i);
+}
+```
 
 ## orderby Clause
 ```cs
@@ -296,7 +475,103 @@ Console.WriteLine("Count of odd numbers: {0}", countOdd);
 ```
 
 
-## Lambda Expression Parameter
+## Deferred Execution
 ```cs
+int[] numbers = { 10, 20, 30, 40, 1, 2, 3, 8 };
+
+// Get numbers less than ten.
+var subset = from i in numbers where i < 10 select i;
+
+**// LINQ statement evaluated here!**
+foreach (var i in subset)
+    Console.WriteLine("{0} < 10", i);
+
+
+// Change some data in the array.
+numbers[0] = 4;
+
+**// Evaluated again!**
+foreach (var j in subset)
+    Console.WriteLine("{0} < 10", j);
+
 ```
+
+
+
+## Immediate Execution
+```cs
+int[] numbers = { 10, 20, 30, 40, 1, 2, 3, 8 };
+
+// Get data RIGHT NOW as int[].
+int[] subsetAsIntArray = (from i in numbers where i < 10 select i).ToArray<int>();
+
+// Get data RIGHT NOW as List<int>.
+List<int> subsetAsListOfInts = (from i in numbers where i < 10 select i).ToList<int>();
+
+```
+
+
+## Using Enumerable / Lambda Expressions
+```cs
+
+string[] currentVideoGames = {"Morrowind", "Uncharted 2",
+"Fallout 3", "Daxter", "System Shock 2"};
+// Build a query expression using extension methods
+// granted to the Array via the Enumerable type.
+var subset = currentVideoGames.Where(game => game.Contains(" "))
+.OrderBy(game => game).Select(game => game);
+// Print out the results.
+foreach (var game in subset)
+Console.WriteLine("Item: {0}", game);
+Console.WriteLine();
+
+
+// Break it down!
+var gamesWithSpaces = currentVideoGames.Where(game => game.Contains(" "));
+var orderedGames = gamesWithSpaces.OrderBy(game => game);
+var subset = orderedGames.Select(game => game);
+
+
+
+
+//Using Anonymous Methods
+// Build the necessary Func<> delegates using anonymous methods.
+Func<string, bool> searchFilter =
+delegate(string game) { return game.Contains(" "); };
+Func<string, string> itemToProcess = delegate(string s) { return s; };
+// Pass the delegates into the methods of Enumerable.
+var subset = currentVideoGames.Where(searchFilter)
+.OrderBy(itemToProcess).Select(itemToProcess);
+// Print out the results.
+foreach (var game in subset)
+Console.WriteLine("Item: {0}", game);
+Console.WriteLine();
+
+
+//"***** Using Raw Delegates *****"
+// Build the necessary Func<> delegates.
+Func<string, bool> searchFilter = new Func<string, bool>(Filter);
+Func<string, string> itemToProcess = new Func<string,string>(ProcessItem);
+// Pass the delegates into the methods of Enumerable.
+var subset = currentVideoGames
+.Where(searchFilter).OrderBy(itemToProcess).Select(itemToProcess);
+// Print out the results.
+foreach (var game in subset)
+Console.WriteLine("Item: {0}", game);
+Console.WriteLine();
+
+
+
+
+
+```
+
+
+
+## Using Enumerable / Lambda Expressions
+```cs
+
+
+```
+
 
