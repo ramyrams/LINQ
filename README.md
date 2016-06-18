@@ -8,6 +8,21 @@
 // C# lambda expression.
 List<int> evenNumbers = list.FindAll(i => (i % 2) == 0);
 
+//Lambda Expression Demonstrating Explicit Argument Types
+Func<int, int, int> add = (int x, int y) => x + y;
+Console.WriteLine(add(3, 4));
+
+
+Action<double> print = amount => Console.WriteLine(“{0:c}”, amount); 
+Action<double> michiganSalesTax = amount => print(amount *= 1.06);
+
+var amounts = new double[]{ 10.36, 12.00, 134};
+
+Array.ForEach<double>(amounts, michiganSalesTax);
+
+Console.ReadLine();
+
+
 ```
 
 
@@ -33,6 +48,27 @@ int i = s.WordCount();
 
 ```
 
+## Partial Classes and Methods
+```cs
+namespace PM
+{
+    partial class A
+    {
+        partial void OnSomethingHappened(string s);
+    }
+
+    // This part can be in a separate file. 
+    partial class A
+    {
+        // Comment out this method and the program 
+        // will still compile. 
+        partial void OnSomethingHappened(String s)
+        {
+            Console.WriteLine("Something happened: {0}", s);
+        }
+    }
+}
+```
 
 ## Anonymous Type
 ```cs
@@ -55,6 +91,16 @@ var students = new[]
     new { LName="Smith", FName="Bob", Age=20, Major="CompSci" },
     new { LName="Fleming", FName="Carol", Age=21, Major="History" }
 };
+
+//Adding Methods to Anonymous Types
+Func<string, string, string> Concat1 = delegate(string first, string last)
+{
+	return last + “, “ + first;
+};
+
+var dena = new {First=”Dena”, Last=”Swanson”, Concat=Concat1};
+Console.WriteLine(dena.Concat(dena.First, dena.Last));
+
 
 ```
 
