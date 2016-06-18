@@ -474,9 +474,80 @@ var countOdd = intArray.Count(myDel);
 Console.WriteLine("Count of odd numbers: {0}", countOdd);
 ```
 
-
 ## Deferred Execution
 ```cs
+
+```
+
+##Chaining Query Operators
+```cs
+string[] names = { "Tom", "Dick", "Harry", "Mary", "Jay" };
+IEnumerable<string> query = names
+.Where (n => n.Contains ("a"))
+.OrderBy (n => n.Length)
+.Select (n => n.ToUpper());
+foreach (string name in query) Console.WriteLine (name);
+
+
+//Output
+JAY
+MARY
+HARRY
+```
+
+
+## Natural Ordering
+```cs
+int[] numbers = { 10, 9, 8, 7, 6 };
+IEnumerable<int> firstThree = numbers.Take (3); // { 10, 9, 8 }
+
+
+IEnumerable<int> lastTwo = numbers.Skip (3); // { 7, 6 }
+
+IEnumerable<int> reversed = numbers.Reverse(); // { 6, 7, 8, 9, 10 }
+
+
+int firstNumber = numbers.First(); // 10
+int lastNumber = numbers.Last(); // 6
+int secondNumber = numbers.ElementAt(1); // 9
+int secondLowest = numbers.OrderBy(n=>n).Skip(1).First(); // 7
+
+//aggregation
+int count = numbers.Count(); // 5;
+int min = numbers.Min(); // 6;
+
+
+//quantifiers
+bool hasTheNumberNine = numbers.Contains (9); // true
+bool hasMoreThanZeroElements = numbers.Any(); // true
+bool hasAnOddElement = numbers.Any (n => n % 2 != 0); // true
+
+```
+
+## Deferred Execution
+The extra number that we sneaked into the list after constructing the query is
+included in the result, because it’s not until the foreach statement runs that any
+filtering or sorting takes place. This is called deferred or lazy execution.
+```cs
+
+var numbers = new List<int>();
+numbers.Add (1);
+
+IEnumerable<int> query = numbers.Select (n => n * 10); // Build query
+
+numbers.Add (2); // Sneak in an extra element
+
+foreach (int n in query)
+Console.Write (n + "|"); // 10|20|
+
+
+
+
+
+
+
+
+
 int[] numbers = { 10, 20, 30, 40, 1, 2, 3, 8 };
 
 // Get numbers less than ten.
@@ -493,6 +564,40 @@ numbers[0] = 4;
 **// Evaluated again!**
 foreach (var j in subset)
     Console.WriteLine("{0} < 10", j);
+
+```
+
+## Reevaluation
+Deferred execution has another consequence: a deferred execution query is reevaluated when you re-enumerate.
+
+```cs
+var numbers = new List<int>() { 1, 2 };
+IEnumerable<int> query = numbers.Select (n => n * 10);
+
+foreach (int n in query) Console.Write (n + "|"); // 10|20|
+numbers.Clear();
+
+foreach (int n in query) Console.Write (n + "|"); // <nothing>
+
+```
+
+
+## Captured Variables
+lambda expressions capture outer variables, the query will honor the value of the those variables at the time the query runs
+```cs
+int[] numbers = { 1, 2 };
+int factor = 10;
+IEnumerable<int> query = numbers.Select (n => n * factor);
+factor = 20;
+foreach (int n in query) Console.Write (n + "|"); // 20|40|
+
+```
+
+
+
+## Captured Variables
+```cs
+
 
 ```
 
