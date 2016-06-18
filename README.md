@@ -680,12 +680,14 @@ Console.WriteLine();
 * TakeWhile - Emits elements from the input sequence until the predicate is false 
 * SkipWhile - Ignores elements from the input sequence until the predicate is false, and then emits the rest
 * Distinct - Returns a sequence that excludes duplicates 
+
 ```cs
 
 string[] names = { "Tom", "Dick", "Harry", "Mary", "Jay" };
-// Result: { "Harry", "Mary", "Jay" }
-IEnumerable<string> query = names.Where (name => name.EndsWith ("y"));
 
+//Where
+IEnumerable<string> query = names.Where (name => name.EndsWith ("y"));
+// Result: { "Harry", "Mary", "Jay" }
 
 //Take and Skip
 //there are 100 matches. The following returns the first 20:
@@ -719,8 +721,8 @@ string s = new string (distinctLetters); // HeloWrd
 
 
 ## Projecting
-Select - Transforms each input element with the given lambda expression 
-SelectMany - Transforms each input element, and then flattens and concatenates the resultant subsequences
+* Select - Transforms each input element with the given lambda expression 
+* SelectMany - Transforms each input element, and then flattens and concatenates the resultant subsequences
 
 ```cs
 IEnumerable<string> query = from f in FontFamily.Families
@@ -746,14 +748,43 @@ select new { p.Description, p.Price }
 ```
 
 ## Joining
-Join - Applies a lookup strategy to match elements from two collections, emitting a flat result set
-GroupJoin - As above, but emits a hierarchical result set 
-Zip  - Enumerates two sequences in step (like a zipper), applying a function over each element pair
+* Join - Applies a lookup strategy to match elements from two collections, emitting a flat result set
+* GroupJoin - As above, but emits a hierarchical result set 
+* Zip  - Enumerates two sequences in step (like a zipper), applying a function over each element pair
+ 
 ```cs
+//join
+IQueryable<string> query =
+from c in dataContext.Customers
+join p in dataContext.Purchases on c.ID equals p.CustomerID
+select c.Name + " bought a " + p.Description;
+
+//GroupJoin
+//An into clause translates to GroupJoin only when it appears directly after a join clause.
+IEnumerable<IEnumerable<Purchase>> query =
+from c in customers
+join p in purchases on c.ID equals p.CustomerID
+into custPurchases
+select custPurchases; // custPurchases is a sequence
+
+//Zip
+int[] numbers = { 3, 5, 7 };
+string[] words = { "three", "five", "seven", "ignored" };
+IEnumerable<string> zip = numbers.Zip (words, (n, w) => n + "=" + w);
+
+//Output
+3=three
+5=five
+7=seven
+
 
 ```
 
 ## Ordering
+* OrderBy, ThenBy - Sorts a sequence in ascending order 
+* OrderByDescending, ThenByDescending - Sorts a sequence in descending order 
+* Reverse - Returns a sequence in reverse order
+
 ```cs
 IEnumerable<string> query = names.OrderBy (s => s.Length);
 IEnumerable<string> query = names.OrderBy (s => s.Length);
@@ -766,22 +797,33 @@ dataContext.Purchases.OrderByDescending (p => p.Price).ThenBy (p => p.Descriptio
 ```
 
 
+## Grouping
+* GroupBy -  Groups a sequence into subsequences
+```cs
+IEnumerable<IGrouping<string,string>> query = files.GroupBy (file => Path.GetExtension (file));
+```
+
 ## Set Operators
 Concat - Returns a concatenation of elements in each of the two sequences 
 Union - Returns a concatenation of elements in each of the two sequences, excluding duplicates
 Intersect - Returns elements present in both sequences 
 Except - Returns elements present in the first, but not the second sequence EXCEPT
 ```cs
+//Concat and Union
 int[] seq1 = { 1, 2, 3 }, seq2 = { 3, 4, 5 };
 IEnumerable<int> concat = seq1.Concat (seq2), // { 1, 2, 3, 3, 4, 5 }
 union = seq1.Union (seq2); // { 1, 2, 3, 4, 5 }
 
 
-int[] seq1 = { 1, 2, 3 }, seq2 = { 3, 4, 5 };
+//Intersect and Except
 IEnumerable<int>
 commonality = seq1.Intersect (seq2), // { 3 }
 difference1 = seq1.Except (seq2), // { 1, 2 }
 difference2 = seq2.Except (seq1); // { 4, 5 }
+
+
+
+
 ```
 
 
@@ -794,15 +836,25 @@ ToDictionary -  Converts IEnumerable<T> to Dictionary<TKey,TValue>
 ToLookup - Converts IEnumerable<T> to ILookup<TKey,TElement>
 AsEnumerable - Downcasts to IEnumerable<T>
 AsQueryable - Casts or converts to IQueryable<T>
+
 ```cs
+//OfType and Cast
 ArrayList classicList = new ArrayList(); // in System.Collections
 classicList.AddRange ( new int[] { 3, 4, 5 } );
 IEnumerable<int> sequence1 = classicList.Cast<int>();
 
+
 ```
 
 ## Element Operators
+* First, FirstOrDefault  - Returns the first element in the sequence, optionally satisfying a predicate
+* Last, LastOrDefault - Returns the last element in the sequence, optionally satisfying a predicate
+* Single, SingleOrDefault  - Equivalent to First/First OrDefault, but throws an exception if there is more than one match
+* ElementAt, ElementAtOrDefault - Returns the element at the specified position 
+* DefaultIfEmpty  - Returns a single-element sequence whose value is default(TSource) if the sequence has no elements
+
 ```cs
+//First, Last, and Single
 int[] numbers = { 1, 2, 3, 4, 5 };
 int first = numbers.First(); // 1
 int last = numbers.Last(); // 5
@@ -819,7 +871,7 @@ int singleError = numbers.Single (n => n > 10); // Error
 int noMatches = numbers.SingleOrDefault (n => n > 10); // 0
 int divBy2Error = numbers.SingleOrDefault (n => n % 2 == 0); // Error
 
-
+//ElementAt
 int[] numbers = { 1, 2, 3, 4, 5 };
 int third = numbers.ElementAt (2); // 3
 int tenthError = numbers.ElementAt (9); // Exception
@@ -827,14 +879,21 @@ int tenth = numbers.ElementAtOrDefault (9); // 0
 ```
 
 ## Aggregation Methods
+* Count, LongCount - Returns the number of elements in the input sequence, optionally satisfying a predicate
+* Min, Max  - Returns the smallest or largest element in the sequence
+* Sum, Average  - Calculates a numeric sum or average over elements in the sequence
+* Aggregate - Performs a custom aggregation
+
 ```cs
+//Count and LongCount
 int digitCount = "pa55w0rd".Count (c => char.IsDigit (c)); // 3
 
+//Min and Max
 int[] numbers = { 28, 32, 14 };
 int smallest = numbers.Min(); // 14;
 int largest = numbers.Max(); // 32;
 
-
+//Sum and Average
 decimal[] numbers = { 3, 4, 8 };
 decimal sumTotal = numbers.Sum(); // 15
 decimal average = numbers.Average(); // 5 (mean value)
@@ -843,15 +902,17 @@ decimal average = numbers.Average(); // 5 (mean value)
 
 
 ## Quantifiers
+* Contains - Returns true if the input sequence contains the given element 
+* Any  - Returns true if any elements satisfy the given predicate 
+* All  - Returns true if all elements satisfy the given predicate 
+* SequenceEqual  - Returns true if the second sequence has identical elements to the input sequence
+
+
 ```cs
 bool hasAThree = new int[] { 2, 3, 4 }.Contains (3); // true;
 
-
 bool hasAThree = new int[] { 2, 3, 4 }.Any (n => n == 3); // true;
-
 bool hasABigNumber = new int[] { 2, 3, 4 }.Any (n => n > 10); // false;
-
-
 bool hasABigNumber = new int[] { 2, 3, 4 }.Where (n => n > 10).Any();
 
 dataContext.Customers.Where (c => c.Purchases.All (p => p.Price < 100));
@@ -868,9 +929,28 @@ Console.Write (i + " "); // 5 5 5
 
 
 
+## Generation Methods
+* Empty - Creates an empty sequence
+* Repeat - Creates a sequence of repeating elements
+* Range - Creates a sequence of integers
+
+```cs
+//Empty
+foreach (string s in Enumerable.Empty<string>())
+Console.Write (s); // <nothing>
+
+
+//Range and Repeat
+foreach (int i in Enumerable.Range (5, 3))
+Console.Write (i + " "); // 5 6 7
+
+foreach (int i in Enumerable.Repeat (5, 3))
+Console.Write (i + " "); // 5 5 5
+```
+
+
+
 ## Projecting
 ```cs
 
 ```
-
-
