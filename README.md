@@ -950,7 +950,220 @@ Console.Write (i + " "); // 5 5 5
 
 
 
-## Projecting
-```cs
+
+
+
+# LINQ to XML
+
+## DOM
+```xml
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<customer id="123" status="archived">
+<firstname>Joe</firstname>
+<lastname>Bloggs</lastname>
+</customer>
 
 ```
+
+## X-DOM
+```cs
+string xml = @"<customer id='123' status='archived'>
+<firstname>Joe</firstname>
+<lastname>Bloggs<!--nice name--></lastname>
+</customer>";
+XElement customer = XElement.Parse (xml);
+```
+
+
+
+
+## Loading and Parsing
+```cs
+
+XDocument fromWeb = XDocument.Load ("http://albahari.com/sample.xml");
+XElement fromFile = XElement.Load (@"e:\media\somefile.xml");
+XElement config = XElement.Parse (
+@"<configuration>
+<client enabled='true'>
+<timeout>30</timeout>
+</client>
+</configuration>");
+
+foreach (XElement child in config.Elements())
+Console.WriteLine (child.Name); // client
+XElement client = config.Element ("client");
+bool enabled = (bool) client.Attribute ("enabled"); // Read attribute
+
+Console.WriteLine (enabled); // True
+client.Attribute ("enabled").SetValue (!enabled); // Update attribute
+int timeout = (int) client.Element ("timeout"); // Read element
+Console.WriteLine (timeout); // 30
+client.Element ("timeout").SetValue (timeout * 2); // Update element
+client.Add (new XElement ("retries", 3)); // Add new elememt
+Console.WriteLine (config); // Implicitly call config.ToString()
+
+//Output
+<configuration>
+<client enabled="false">
+<timeout>60</timeout>
+<retries>3</retries>
+</client>
+</configuration
+
+
+
+```
+
+
+
+
+## Functional Construction
+```cs
+XElement customer =
+new XElement ("customer", new XAttribute ("id", 123),
+new XElement ("firstname", "joe"),
+new XElement ("lastname", "bloggs",
+new XComment ("nice name")
+)
+);
+```
+
+
+## Automatic Deep Cloning
+```cs
+var address = new XElement ("address",
+new XElement ("street", "Lawley St"),
+new XElement ("town", "North Beach")
+);
+var customer1 = new XElement ("customer1", address);
+var customer2 = new XElement ("customer2", address);
+customer1.Element ("address").Element ("street").Value = "Another St";
+Console.WriteLine (
+customer2.Element ("address").Element ("street").Value); // Lawley St
+```
+
+
+## FirstNode, LastNode, and Nodes
+```cs
+var bench = new XElement ("bench",
+new XElement ("toolbox",
+new XElement ("handtool", "Hammer"),
+new XElement ("handtool", "Rasp")
+),
+new XElement ("toolbox",
+new XElement ("handtool", "Saw"),
+new XElement ("powertool", "Nailgun")
+),
+new XComment ("Be careful with the nailgun")
+);
+foreach (XNode node in bench.Nodes())
+Console.WriteLine (node.ToString (SaveOptions.DisableFormatting) + ".");
+
+//Output
+<toolbox><handtool>Hammer</handtool><handtool>Rasp</handtool></toolbox>.
+<toolbox><handtool>Saw</handtool><powertool>Nailgun</powertool></toolbox>.
+<!--Be careful with the nailgun-->.
+
+```
+
+
+## Updating an X-DOM
+```cs
+XElement settings = new XElement ("settings");
+settings.SetElementValue ("timeout", 30); // Adds child node
+settings.SetElementValue ("timeout", 60); // Update it to 60
+
+
+XElement items = new XElement ("items",
+new XElement ("one"),
+new XElement ("three")
+);
+items.FirstNode.AddAfterSelf (new XElement ("two"));
+
+
+XElement items = XElement.Parse ("<items><one/><two/><three/></items>");
+items.FirstNode.ReplaceWith (new XComment ("One was here"));
+
+
+
+```
+
+
+## Working with Values
+```cs
+//Setting Values
+var e = new XElement ("date", DateTime.Now);
+e.SetValue (DateTime.Now.AddDays(1));
+Console.Write (e.Value); // 2007-03-02T16:39:10.734375+09:00
+
+//Getting Values
+XElement e = new XElement ("now", DateTime.Now);
+DateTime dt = (DateTime) e;
+XAttribute a = new XAttribute ("resolution", 1.234);
+double res = (double) a;
+
+
+//Values and Mixed Content Nodes
+XElement summary = new XElement ("summary",
+new XText ("An XAttribute is "),
+new XElement ("bold", "not"),
+new XText (" an XNode")
+);
+
+//Automatic XText Concatenation
+var e = new XElement ("test", new XText ("Hello"), new XText ("World"));
+Console.WriteLine (e.Value); // HelloWorld
+Console.WriteLine (e.Nodes().Count()); // 2
+
+
+
+
+
+
+```
+
+## Documents and Declarations
+```cs
+var doc = new XDocument (
+new XElement ("test", "data")
+);
+
+Console.WriteLine (doc.Root.Name.LocalName); // html
+XElement bodyNode = doc.Root.Element (ns + "body");
+Console.WriteLine (bodyNode.Document == doc); // True
+
+
+var doc = new XDocument (
+new XDeclaration ("1.0", "utf-16", "yes"),
+new XElement ("test", "data")
+);
+doc.Save ("test.xml");
+
+
+//Writing a declaration to a string
+var doc = new XDocument (
+new XDeclaration ("1.0", "utf-8", "yes"),
+new XElement ("test", "data")
+);
+var output = new StringBuilder();
+var settings = new XmlWriterSettings { Indent = true };
+using (XmlWriter xw = XmlWriter.Create (output, settings))
+doc.Save (xw);
+Console.WriteLine (output.ToString());
+
+//Output
+<?xml version="1.0" encoding="utf-16" standalone="yes"?>
+<test>data</test>
+
+
+
+
+```
+
+
+
+## Updating an X-DOM
+```cs
+```
+
+
